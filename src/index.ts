@@ -42,9 +42,17 @@ async function main() {
   }
 
   const app = express();
+  app.set('trust proxy', true);
+
+  const corsOrigin = env.clientOrigin.includes(',')
+    ? env.clientOrigin.split(',').map((s) => s.trim()).filter(Boolean)
+    : env.clientOrigin === '*'
+    ? true
+    : env.clientOrigin;
+
   app.use(
     cors({
-      origin: env.clientOrigin,
+      origin: corsOrigin,
       credentials: true,
     })
   );
@@ -94,8 +102,9 @@ async function main() {
   });
 
   app.listen(env.port, () => {
-    console.log(`API listening on http://localhost:${env.port}`);
-    console.log(`Swagger UI at http://localhost:${env.port}/api/docs`);
+    const listenTarget = typeof env.port === 'number' ? `http://localhost:${env.port}` : String(env.port);
+    console.log(`API listening on ${listenTarget}`);
+    console.log(`Swagger UI at ${typeof env.port === 'number' ? `http://localhost:${env.port}/api/docs` : '/api/docs'}`);
     console.log(`Uploads folder: ${path.join(UPLOADS_ROOT)}`);
   });
 }

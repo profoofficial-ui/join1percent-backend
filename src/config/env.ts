@@ -2,8 +2,10 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const rawPort = process.env.PORT;
+
 export const env = {
-  port: Number(process.env.PORT) || 5000,
+  port: rawPort ? (!isNaN(Number(rawPort)) ? Number(rawPort) : rawPort) : 5000,
   mongoUri: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/coursellm',
   jwtSecret: process.env.JWT_SECRET || 'coursellm_dev_jwt_secret_change_me',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
