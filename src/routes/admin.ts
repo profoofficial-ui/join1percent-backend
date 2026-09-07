@@ -1,0 +1,74 @@
+import { Router } from 'express';
+import {
+  getAdminStats,
+  getCommissionSettings,
+  updateCommissionSettings,
+} from '../controllers/adminStatsController.js';
+import { getPublicSettings, updateSiteSettings } from '../controllers/siteSettingsController.js';
+import {
+  listAdminFaqs,
+  createFaq,
+  updateFaq,
+  deleteFaq,
+} from '../controllers/faqController.js';
+import {
+  listAdminInstructors,
+  createInstructor,
+  updateInstructor,
+  deleteInstructor,
+} from '../controllers/instructorController.js';
+import {
+  listAdminTestimonials,
+  createTestimonial,
+  updateTestimonial,
+  deleteTestimonial,
+} from '../controllers/testimonialController.js';
+import {
+  listAdminLeads,
+  deleteLead,
+} from '../controllers/leadController.js';
+import { listAdminOrders } from '../controllers/checkoutController.js';
+import { listAdminUsers, updateAdminUser, deleteAdminUser } from '../controllers/userController.js';
+import { listAdminKyc, reviewKyc } from '../controllers/kycController.js';
+import { listAdminPayouts, reviewPayout } from '../controllers/payoutController.js';
+import { listAdminSupport, updateSupportTicket } from '../controllers/supportController.js';
+import { listAdminWalletTransactions, adjustAdminWallet } from '../controllers/adminWalletController.js';
+import { requireAdmin, requireAuth } from '../middleware/auth.js';
+
+const router = Router();
+
+router.use(requireAuth, requireAdmin);
+
+router.get('/orders', listAdminOrders);
+router.get('/users', listAdminUsers);
+router.put('/users/:id', updateAdminUser);
+router.delete('/users/:id', deleteAdminUser);
+router.get('/stats', getAdminStats);
+router.get('/commission', getCommissionSettings);
+router.put('/commission', updateCommissionSettings);
+router.get('/settings', getPublicSettings);
+router.put('/settings', updateSiteSettings);
+router.get('/faqs', listAdminFaqs);
+router.post('/faqs', createFaq);
+router.put('/faqs/:id', updateFaq);
+router.delete('/faqs/:id', deleteFaq);
+router.get('/instructors', listAdminInstructors);
+router.post('/instructors', createInstructor);
+router.put('/instructors/:id', updateInstructor);
+router.delete('/instructors/:id', deleteInstructor);
+router.get('/testimonials', listAdminTestimonials);
+router.post('/testimonials', createTestimonial);
+router.put('/testimonials/:id', updateTestimonial);
+router.delete('/testimonials/:id', deleteTestimonial);
+router.get('/leads', listAdminLeads);
+router.delete('/leads/:id', deleteLead);
+router.get('/kyc', listAdminKyc);
+router.patch('/kyc/:id', reviewKyc);
+router.get('/payouts', listAdminPayouts);
+router.patch('/payouts/:id', reviewPayout);
+router.get('/support', listAdminSupport);
+router.patch('/support/:id', updateSupportTicket);
+router.get('/wallet/transactions', listAdminWalletTransactions);
+router.post('/wallet/adjust', adjustAdminWallet);
+
+export default router;

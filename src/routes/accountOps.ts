@@ -1,0 +1,29 @@
+import { Router } from 'express';
+import { getMyKyc, submitMyKyc } from '../controllers/kycController.js';
+import { createSupportTicket, listMySupportTickets } from '../controllers/supportController.js';
+import { getMyAffiliates, getMyWallet } from '../controllers/walletController.js';
+import { requestPayout } from '../controllers/payoutController.js';
+import { getPublicCommission } from '../controllers/commissionPublicController.js';
+import { requireAuth } from '../middleware/auth.js';
+
+const kycRouter = Router();
+kycRouter.use(requireAuth);
+kycRouter.get('/mine', getMyKyc);
+kycRouter.post('/mine', submitMyKyc);
+
+const supportRouter = Router();
+supportRouter.use(requireAuth);
+supportRouter.get('/mine', listMySupportTickets);
+supportRouter.post('/', createSupportTicket);
+
+const walletRouter = Router();
+walletRouter.use(requireAuth);
+walletRouter.get('/mine', getMyWallet);
+walletRouter.get('/affiliates', getMyAffiliates);
+walletRouter.post('/payouts', requestPayout);
+
+const commissionRouter = Router();
+commissionRouter.use(requireAuth);
+commissionRouter.get('/', getPublicCommission);
+
+export { kycRouter, supportRouter, walletRouter, commissionRouter };

@@ -1,0 +1,22 @@
+import mongoose, { Schema, type InferSchemaType, type Model } from 'mongoose';
+
+const courseProgressSchema = new Schema(
+  {
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    courseSlug: { type: String, required: true, trim: true, index: true },
+    completedLessonIds: { type: [String], default: [] },
+    lastLessonId: { type: String, default: '' },
+    lastPositionSeconds: { type: Number, default: 0, min: 0 },
+  },
+  { timestamps: true }
+);
+
+courseProgressSchema.index({ userId: 1, courseSlug: 1 }, { unique: true });
+
+export type CourseProgressDocument = mongoose.HydratedDocument<
+  InferSchemaType<typeof courseProgressSchema>
+>;
+
+export const CourseProgress: Model<CourseProgressDocument> =
+  mongoose.models.CourseProgress ||
+  mongoose.model<CourseProgressDocument>('CourseProgress', courseProgressSchema);
