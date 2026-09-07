@@ -1,6 +1,6 @@
-# cPanel Node.js Deployment Guide — Coursellm Backend
+# cPanel Node.js Deployment Guide — Coursellm Backend (Pure JavaScript)
 
-This guide walks you through deploying the **Coursellm Backend** (Node.js + Express + TypeScript + MongoDB + Razorpay) to any cPanel hosting account using **"Setup Node.js App"** (Phusion Passenger).
+This guide walks you through deploying the **Coursellm Backend** (Node.js + Express + ES Modules + MongoDB + Razorpay) to any cPanel hosting account using **"Setup Node.js App"** (Phusion Passenger).
 
 ---
 
@@ -20,25 +20,24 @@ This guide walks you through deploying the **Coursellm Backend** (Node.js + Expr
 
 ---
 
-## 2. Files Prepared for Deployment
+## 2. Pure JavaScript — Zero Build Step Needed!
 
-The backend has already been compiled with `npm run build` and configured for cPanel:
-- `app.js` is created in the root directory to act as the cPanel Phusion Passenger entry point (points directly to `./dist/index.js`).
-- Dynamic port detection is enabled (handles both standard ports and cPanel Passenger Unix sockets).
-- Reverse proxy trust (`trust proxy`) is enabled for proper HTTPS/IP resolution.
+The backend is written in **100% pure modern JavaScript (ES Modules)**:
+- **No `npm run build` or `dist/` folder needed.** The server runs directly from `src/index.js` or `app.js`.
+- `app.js` is placed at the project root as the default entry point for cPanel Phusion Passenger.
+- Reverse proxy trust (`trust proxy`) is enabled for accurate HTTPS and IP resolution.
 - Comma-separated or wildcard CORS support is configured.
 
 ### What to Upload:
-- ✅ `dist/` (the compiled JavaScript production bundle)
-- ✅ `uploads/` (directory with `images/` and `videos/` subdirectories)
-- ✅ `app.js` (entry point for cPanel)
+- ✅ `src/` (all JavaScript backend code)
+- ✅ `uploads/` (folder for uploaded images & videos)
+- ✅ `app.js` (cPanel startup entry point)
 - ✅ `package.json`
 - ✅ `package-lock.json`
-- ✅ `.env` (can be uploaded or configured in cPanel UI)
+- ✅ `.env` (or set environment variables in cPanel UI)
 
 ### What NOT to Upload:
-- ❌ `node_modules/` (Do **not** upload! Uploading Windows `node_modules` to Linux will break dependencies. Always run `npm install` on the server).
-- ❌ `src/` (Not strictly needed on the server because `dist/` contains all compiled code).
+- ❌ `node_modules/` (Do **not** upload! Uploading Windows `node_modules` to Linux will cause binary mismatch errors. Always let cPanel install dependencies on Linux).
 - ❌ `.git/`
 
 ---
@@ -52,20 +51,20 @@ The backend has already been compiled with `npm run build` and configured for cP
 4. Fill in the following fields:
    - **Node.js version**: Select **`20.x`** (or `18.x` LTS).
    - **Application mode**: Select **`Production`**.
-   - **Application root**: Enter a directory name, e.g. `api` or `coursellm-backend` (this folder will be created in your home directory: `/home/yourusername/api`).
+   - **Application root**: Enter a directory name, e.g. `api` or `coursellm-backend` (creates a directory in your home folder: `/home/yourusername/api`).
    - **Application URL**: Select your subdomain (e.g. `api.yourdomain.com`) or domain path.
-   - **Application startup file**: Enter **`app.js`** (the file we created in the root).
+   - **Application startup file**: Enter **`app.js`** (the root file that launches `./src/index.js`).
 5. Click **Create** (top right).
-6. Note the command shown at the top: `source /home/yourusername/nodevenv/.../activate`.
+6. Note the virtualenv command shown at the top: `source /home/yourusername/nodevenv/.../activate`.
 
 ---
 
 ### Step 2: Upload Application Files
 1. Open cPanel **File Manager**.
 2. Navigate to your application root directory (e.g., `/home/yourusername/api` or `/home/yourusername/coursellm-backend`).
-3. If cPanel created a default placeholder `app.js` or `package.json`, delete or overwrite them.
+3. If cPanel created a default placeholder `app.js` or `package.json`, delete or replace them.
 4. Upload a `.zip` file containing:
-   - `dist`
+   - `src`
    - `uploads`
    - `app.js`
    - `package.json`
@@ -97,7 +96,7 @@ RAZORPAY_KEY_SECRET=your_razorpay_secret
 RAZORPAY_WEBHOOK_SECRET=your_webhook_secret
 ```
 
-> **Note on `CLIENT_ORIGIN`**: If your frontend is deployed on `https://yourdomain.com`, make sure you include `https://` and both `www` and non-`www` versions separated by a comma.
+> **Note on `CLIENT_ORIGIN`**: If your frontend is deployed on `https://yourdomain.com`, include `https://` and both `www` and non-`www` versions separated by a comma.
 
 ---
 
@@ -107,7 +106,7 @@ RAZORPAY_WEBHOOK_SECRET=your_webhook_secret
 2. Click the edit (pencil) icon next to your app.
 3. Click the **Run NPM Install** button.
    - Wait 1-2 minutes until cPanel finishes installing the production dependencies.
-   - *(Alternative via Terminal)*: Open cPanel Terminal, copy and paste the `source /home/.../activate` command, and run:
+   - *(Alternative via Terminal)*: Open cPanel Terminal, paste the `source /home/.../activate` command, and run:
      ```bash
      npm install --omit=dev
      ```
@@ -117,15 +116,20 @@ RAZORPAY_WEBHOOK_SECRET=your_webhook_secret
 ### Step 5: Start or Restart the Application
 
 1. In the Node.js App screen, click **Restart** (or **Run App**).
-2. The application status should change to **Running**.
+2. The application status should show **Running**.
 
 ---
 
 ## 4. Verification
 
-Test your API in a web browser or Postman:
+Test your API in a web browser or curl:
 
-1. **Health check**:
+1. **Root status check**:
+   ```
+   https://api.yourdomain.com/
+   ```
+
+2. **Health check (with live MongoDB status)**:
    ```
    https://api.yourdomain.com/api/health
    ```
@@ -134,39 +138,37 @@ Test your API in a web browser or Postman:
    {
      "ok": true,
      "service": "coursellm-api",
+     "database": "connected",
+     "uptimeSeconds": 12,
+     "timestamp": "2026-09-07T10:15:00.000Z",
      "phase": 4,
      "payments": "razorpay"
    }
    ```
 
-2. **Swagger Documentation**:
+3. **Swagger Documentation**:
    ```
    https://api.yourdomain.com/api/docs
-   ```
-
-3. **Catalogue / Public Courses**:
-   ```
-   https://api.yourdomain.com/api/courses
    ```
 
 ---
 
 ## 5. Troubleshooting Common cPanel Issues
 
-### Problem 1: `503 Service Unavailable` or `Incomplete response received from application`
-- **Cause**: The application crashed during startup (usually unable to connect to MongoDB).
+### Problem 1: `503 Service Unavailable`
+- **Cause**: The application crashed during startup (usually unable to connect to MongoDB Atlas).
 - **Fix**:
   1. Check your MongoDB Atlas connection string.
-  2. Verify that MongoDB Atlas **Network Access** includes `0.0.0.0/0`.
-  3. Check the error log: in cPanel File Manager, check `stderr.log` in your application root folder or look in `/home/username/virtualenv/...`.
+  2. Verify MongoDB Atlas **Network Access** includes `0.0.0.0/0`.
+  3. Check the error log: in cPanel File Manager, check `stderr.log` in your application root folder.
 
 ### Problem 2: CORS Error (`Access to fetch blocked by CORS policy`)
 - **Cause**: `CLIENT_ORIGIN` does not match the frontend's origin URL.
-- **Fix**: Update `CLIENT_ORIGIN` to match your exact frontend domain, including `https://` and any subdomains (comma-separated):
+- **Fix**: Update `CLIENT_ORIGIN` to match your exact frontend domain, including `https://`:
   ```
   CLIENT_ORIGIN=https://myapp.com,https://www.myapp.com
   ```
-  Restart the Node.js app in cPanel after updating.
+  Click **Restart** in cPanel after updating.
 
 ### Problem 3: Uploaded images/videos return 404 or upload fails
 - **Cause**: The `uploads/` directory does not exist or has restrictive write permissions.
@@ -174,7 +176,7 @@ Test your API in a web browser or Postman:
 
 ### Problem 4: Changes to code or `.env` are not showing up
 - **Cause**: Phusion Passenger caches the Node.js process in memory.
-- **Fix**: Click **Restart** in the cPanel Node.js App interface, or in Terminal run:
+- **Fix**: Click **Restart** in the cPanel Node.js App interface, or run:
   ```bash
   mkdir -p tmp && touch tmp/restart.txt
   ```

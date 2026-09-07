@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import { createBundle, deleteBundle, getBundle, listBundles, updateBundle, } from '../controllers/bundleController.js';
+import { requireAdmin, requireAuth } from '../middleware/auth.js';
+const router = Router();
+router.use(requireAuth, requireAdmin);
+router.get('/', listBundles);
+router.get('/:id', getBundle);
+router.post('/', createBundle);
+router.patch('/:id', updateBundle);
+router.delete('/:id', deleteBundle);
+export default router;
