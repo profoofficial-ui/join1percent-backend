@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import path from 'path';
+import mongoose from 'mongoose';
 import { connectDb } from './config/db.js';
 import { env } from './config/env.js';
 import { reportCatalogueCounts, seedAdmin, seedFaqs, seedBundlesAndCourses, seedInstructors, seedTestimonials } from './seed.js';
@@ -66,9 +67,30 @@ async function main() {
 
   setupSwagger(app);
 
-  app.get('/api/health', (_req, res) => {
-    res.json({ ok: true, service: 'coursellm-api', phase: 4, payments: 'razorpay' });
+  const getHealth = (_req: express.Request, res: express.Response) => {
+    const isDbConnected = mongoose.connection.readyState === 1;
+    res.status(isDbConnected ? 200 : 503).json({
+      ok: isDbConnected,
+      service: 'coursellm-api',
+      database: isDbConnected ? 'connected' : 'disconnected',
+      uptimeSeconds: Math.floor(process.uptime()),
+      timestamp: new Date().toISOString(),
+      phase: 4,
+      payments: 'razorpay',
+    });
+  };
+
+  app.get('/', (_req, res) => {
+    res.json({
+      name: 'coursellm-backend',
+      status: 'online',
+      health: '/api/health',
+      docs: '/api/docs',
+    });
   });
+
+  app.get('/health', getHealth);
+  app.get('/api/health', getHealth);
 
   app.use('/api/auth', authRoutes);
   app.use('/api/settings', settingsRoutes);
