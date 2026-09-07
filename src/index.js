@@ -42,14 +42,42 @@ async function main() {
     }
     const app = express();
     app.set('trust proxy', true);
-    const corsOrigin = env.clientOrigin.includes(',')
-        ? env.clientOrigin.split(',').map((s) => s.trim()).filter(Boolean)
-        : env.clientOrigin === '*'
-            ? true
-            : env.clientOrigin;
+    const configuredOrigins = (env.clientOrigin || '')
+        .split(',')
+        .map((s) => s.trim().replace(/\/$/, ''))
+        .filter(Boolean);
+
+    const defaultOrigins = [
+        'https://join1percent.in',
+        'https://www.join1percent.in',
+        'http://localhost:3000',
+        'http://localhost:5173',
+    ];
+
+    const allowedOrigins = Array.from(new Set([...defaultOrigins, ...configuredOrigins]));
+
     app.use(cors({
-        origin: corsOrigin,
+        origin: (origin, callback) => {
+            if (!origin) return callback(null, true);
+
+            if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+
+            try {
+                const url = new URL(origin);
+                if (url.hostname === 'join1percent.in' || url.hostname.endsWith('.join1percent.in') || url.hostname === 'localhost') {
+                    return callback(null, true);
+                }
+            } catch {
+                // ignore
+            }
+
+            return callback(null, false);
+        },
         credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     }));
     // Webhooks need the raw body for signature verification.
     app.use('/api/webhooks', express.raw({ type: 'application/json' }), webhookRouter);
