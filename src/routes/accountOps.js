@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { getMyKyc, submitMyKyc } from '../controllers/kycController.js';
 import { createSupportTicket, listMySupportTickets } from '../controllers/supportController.js';
-import { getMyAffiliates, getMyWallet } from '../controllers/walletController.js';
+import { getMyAffiliates, getMyReferralTree, getMyWallet } from '../controllers/walletController.js';
 import { requestPayout } from '../controllers/payoutController.js';
 import { getPublicCommission } from '../controllers/commissionPublicController.js';
 import { requireAuth } from '../middleware/auth.js';
@@ -17,6 +17,7 @@ const walletRouter = Router();
 walletRouter.use(requireAuth);
 walletRouter.get('/mine', getMyWallet);
 walletRouter.get('/affiliates', getMyAffiliates);
+walletRouter.get('/tree', getMyReferralTree);
 walletRouter.post('/payouts', requestPayout);
 const commissionRouter = Router();
 commissionRouter.use(requireAuth);
